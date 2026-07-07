@@ -46,6 +46,7 @@ const CAR_REFERENCE_DATA = [
   { make: "BMW", model: "330i", years: "2023-2025", hp: 255, torqueLbFt: 295, zeroToSixty: 5.6, topSpeedMph: 130, curbWeightLbs: 3600, cargoCuFt: 17.0, seating: 5, lengthIn: 185.7, widthIn: 71.9, heightIn: 56.8, wheelbaseIn: 112.2, basePriceUsd: 44500, turningRadiusFt: 18.4 },
   { make: "Volkswagen", model: "Jetta", years: "2022-2025", hp: 158, torqueLbFt: 184, zeroToSixty: 7.6, topSpeedMph: 126, curbWeightLbs: 3016, cargoCuFt: 14.1, seating: 5, lengthIn: 186.5, widthIn: 70.8, heightIn: 57.7, wheelbaseIn: 105.7, basePriceUsd: 21440, turningRadiusFt: 18.4 },
   { make: "Volkswagen", model: "Tiguan", years: "2022-2024", hp: 184, torqueLbFt: 221, zeroToSixty: 8.1, topSpeedMph: 126, curbWeightLbs: 3611, cargoCuFt: 37.6, seating: 5, lengthIn: 185.1, widthIn: 72.4, heightIn: 66.3, wheelbaseIn: 109.8, basePriceUsd: 28450, turningRadiusFt: 19.2 },
+  { make: "Lexus", model: "TX 350", years: "2024-2025", hp: 275, torqueLbFt: 317, zeroToSixty: 7.8, topSpeedMph: 118, curbWeightLbs: 4740, cargoCuFt: 21.2, cargoBehind2ndRowCuFt: 57.2, seating: 7, lengthIn: 200.2, widthIn: 78.0, heightIn: 68.1, wheelbaseIn: 116.1, basePriceUsd: 56050, turningRadiusFt: 19.5 },
 ];
 
 // Common nickname/abbreviation aliases -> official fueleconomy.gov make names.

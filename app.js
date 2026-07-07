@@ -67,7 +67,54 @@ function makeSlot() {
     dropdownOpen: false,
     live: null,
     ref: null,
+    trimNote: "",
   };
+}
+
+// "Your Car" (slot 0) is remembered across visits so it doesn't need to be
+// re-searched every time the app is opened.
+const MY_CAR_KEY = "carcompare:myCar";
+
+function persistMyCarIfSlot0(slot) {
+  if (slots[0] !== slot) return;
+  try {
+    localStorage.setItem(MY_CAR_KEY, JSON.stringify({
+      year: slot.year, make: slot.make, model: slot.model,
+      optionId: slot.optionId, optionText: slot.optionText, trimNote: slot.trimNote,
+    }));
+  } catch (e) {
+    // localStorage full or unavailable -- not remembering is a non-fatal degradation
+  }
+}
+
+function forgetMyCar() {
+  try { localStorage.removeItem(MY_CAR_KEY); } catch (e) {}
+  renderSlots();
+}
+
+async function restoreMyCar(slot, saved) {
+  slot.phase = "loading";
+  renderSlots();
+  try {
+    slot.years = await fetchYears();
+    slot.year = saved.year;
+    slot.make = saved.make;
+    slot.model = saved.model;
+    slot.optionId = saved.optionId;
+    slot.optionText = saved.optionText;
+    slot.trimNote = saved.trimNote || "";
+    slot.makes = await fetchMakes(saved.year); // so "Change" can search again later
+    slot.live = await fetchVehicleDetail(saved.optionId);
+    slot.ref = findReferenceSpecs(saved.make, saved.model);
+    slot.phase = "done";
+    lastFetchTime = Date.now();
+  } catch (err) {
+    slot.phase = "error";
+    slot.errorMsg = `Couldn't restore your saved car (${err.message || err}). Click "Try again" to search fresh.`;
+  }
+  renderSlots();
+  renderResults();
+  updateDataStatus();
 }
 
 function addSlot() {
@@ -196,6 +243,7 @@ async function finalize(slot, force) {
   slot.ref = findReferenceSpecs(slot.make, slot.model);
   slot.phase = "done";
   lastFetchTime = Date.now();
+  persistMyCarIfSlot0(slot);
   renderSlots();
   renderResults();
   updateDataStatus();
@@ -211,6 +259,7 @@ function changeSlot(slot) {
   slot.live = null;
   slot.ref = null;
   slot.searchText = "";
+  slot.trimNote = "";
   slot.phase = "make";
   renderSlots();
   renderResults();
@@ -394,16 +443,29 @@ function renderSlots() {
     }
 
     if (slot.phase === "done") {
-      const title = `${slot.year} ${slot.make} ${slot.model}`;
+      const title = slot.trimNote ? `${slot.year} ${slot.make} ${slot.model} · ${slot.trimNote}` : `${slot.year} ${slot.make} ${slot.model}`;
+      const trimNoteInput = el("input", {
+        type: "text",
+        class: "trim-note-input",
+        placeholder: slot.options.length <= 1 ? "This model's data source doesn't list trim levels — add one for your reference" : "Add trim/note (optional)",
+        value: slot.trimNote,
+        oninput: (e) => { slot.trimNote = e.target.value; },
+        onblur: () => { persistMyCarIfSlot0(slot); renderSlots(); renderResults(); },
+      });
       card.appendChild(el("div", { class: "slot-resolved" },
         el("strong", null, title),
         el("div", { class: "resolved-sub" }, slot.optionText || ""),
         el("div", { class: "resolved-sub" }, slot.ref ? "Reference specs matched ✓" : "No curated reference specs for this model — showing live data only"),
+        trimNoteInput,
         el("div", { class: "resolved-actions" },
           el("button", { class: "link-btn", onclick: () => changeSlot(slot) }, "Change"),
           el("button", { class: "link-btn", onclick: () => refreshSlot(slot) }, "Refresh this car"),
         ),
         el("div", { class: "resolved-actions" }, ...reviewLinks(slot)),
+        idx === 0 ? el("div", { class: "resolved-sub" },
+          "This car is remembered and will load automatically next time. ",
+          el("button", { class: "link-btn", onclick: () => forgetMyCar() }, "Forget"),
+        ) : null,
       ));
     }
 
@@ -415,7 +477,6 @@ function renderSlots() {
   });
 
   document.getElementById("addSlotBtn").disabled = slots.length >= MAX_SLOTS;
-  document.getElementById("compareBtn").disabled = slots.filter((s) => s.phase === "done").length < 2;
 
   if (focusedSlotId != null) {
     const inputEl = document.getElementById(`search-input-${focusedSlotId}`);
@@ -502,7 +563,7 @@ function renderResults() {
     el("th", null, "Spec"),
     ...done.map((s, i) => el("th", null,
       i === 0 ? "Your Car" : `Car ${i + 1}`,
-      el("div", { class: "th-sub" }, `${s.year} ${s.make} ${s.model}`),
+      el("div", { class: "th-sub" }, s.trimNote ? `${s.year} ${s.make} ${s.model} · ${s.trimNote}` : `${s.year} ${s.make} ${s.model}`),
       el("div", { class: "th-links" }, ...reviewLinks(s)),
     )),
   );
@@ -555,9 +616,18 @@ function renderResults() {
 function init() {
   slots = [makeSlot(), makeSlot(), makeSlot()];
   renderSlots();
-  slots.forEach(initYear);
+
+  let savedMyCar = null;
+  try { savedMyCar = JSON.parse(localStorage.getItem(MY_CAR_KEY)); } catch (e) {}
+  if (savedMyCar && savedMyCar.optionId) {
+    restoreMyCar(slots[0], savedMyCar);
+  } else {
+    initYear(slots[0]);
+  }
+  initYear(slots[1]);
+  initYear(slots[2]);
+
   document.getElementById("addSlotBtn").addEventListener("click", addSlot);
-  document.getElementById("compareBtn").addEventListener("click", renderResults);
   document.getElementById("refreshAllBtn").addEventListener("click", refreshAll);
   updateDataStatus();
 
