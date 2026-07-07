@@ -421,6 +421,9 @@ function buildDropdownNode(slot) {
   if (!phaseConfig || !slot.dropdownOpen) return null;
   const filtered = filterAndSort(phaseConfig.list, slot.searchText, phaseConfig.suffixStrip);
   const items = filtered.slice(0, 30);
+  const noMatchHint = slot.phase === "model" && slot.searchText
+    ? "No matches for this model year — fueleconomy.gov may not have published data for it yet. Try a different year above."
+    : "No matches";
   return el("div", { class: "search-dropdown" },
     items.length
       ? items.map((item) => el("button", {
@@ -428,7 +431,7 @@ function buildDropdownNode(slot) {
           class: "search-item",
           onmousedown: (e) => { e.preventDefault(); const val = slot.phase === "trim" ? item.value : item.text; phaseConfig.select(slot, val); },
         }, item.text))
-      : el("div", { class: "search-empty" }, "No matches"),
+      : el("div", { class: "search-empty" }, noMatchHint),
   );
 }
 
