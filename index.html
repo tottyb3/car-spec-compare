@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Car Spec Compare</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>Car Spec Compare</h1>
+    <p class="subtitle">Type in your car and 2&ndash;3 others to compare specs side by side, in English and metric units.</p>
+    <div class="data-status">
+      <span id="dataStatusText">Live data from fueleconomy.gov &mdash; not yet fetched</span>
+      <button id="refreshAllBtn" class="link-btn">Refresh all data</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="carSlots" class="car-slots"></section>
+
+    <div class="slot-controls">
+      <button id="addSlotBtn" class="secondary-btn">+ Add another car</button>
+      <button id="compareBtn" class="primary-btn" disabled>Compare cars</button>
+    </div>
+
+    <section id="resultsSection" class="results-section" hidden>
+      <div class="legend">
+        <span class="legend-item"><span class="swatch better"></span> Better</span>
+        <span class="legend-item"><span class="swatch worse"></span> Worse</span>
+        <span class="legend-item"><span class="swatch neutral"></span> Informational (no clear "better")</span>
+      </div>
+      <div id="compareTableWrap"></div>
+    </section>
+  </main>
+
+  <script src="cardata.js"></script>
+  <script src="api.js"></script>
+  <script src="units.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
