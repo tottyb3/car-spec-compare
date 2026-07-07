@@ -226,6 +226,41 @@ main {
   font-size: 0.8rem;
 }
 
+.suggestions {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.suggestions-title {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.suggestion-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #14112c;
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.suggestion-chip .link-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .remove-slot-btn {
   position: absolute;
   top: 10px;

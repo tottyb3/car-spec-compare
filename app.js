@@ -318,6 +318,80 @@ function el(tag, props, ...children) {
   return node;
 }
 
+// Adds one of the "commonly compared" suggestions as a new comparison car,
+// auto-resolving make/model/trim (picking the first trim match) so it's a
+// true one-click add. The user can still refine it via "Change" afterward.
+async function addSuggestedCar(entry) {
+  let slot = slots.find((s) => s.phase === "make" && !s.make);
+  if (!slot) {
+    if (slots.length >= MAX_SLOTS) return;
+    slot = makeSlot();
+    slots.push(slot);
+    renderSlots();
+    await initYear(slot);
+    if (slot.phase !== "make") return; // initYear failed -- error already shown
+  }
+
+  slot.phase = "loading";
+  renderSlots();
+  try {
+    if (!slot.makes.length) slot.makes = await fetchMakes(slot.year);
+    const makeKey = normalizeKey(entry.make);
+    const makeMatch = slot.makes.find((m) => normalizeKey(m.text) === makeKey) || slot.makes.find((m) => normalizeKey(m.text).includes(makeKey));
+    if (!makeMatch) throw new Error(`Couldn't find ${entry.make} for model year ${slot.year}`);
+    slot.make = makeMatch.text;
+
+    slot.models = await fetchModels(slot.year, slot.make);
+    const modelKey = normalizeKey(entry.model);
+    const modelMatch = slot.models.find((m) => {
+      const k = stripKnownSuffixes(normalizeKey(m.text));
+      return k === modelKey || k.includes(modelKey) || modelKey.includes(k);
+    });
+    if (!modelMatch) throw new Error(`Couldn't find ${entry.model} for ${slot.year} ${slot.make}`);
+    slot.model = modelMatch.text;
+
+    slot.options = await fetchOptions(slot.year, slot.make, slot.model);
+    if (!slot.options.length) throw new Error("No trims found for this year/make/model combination");
+    slot.optionId = slot.options[0].value;
+    slot.optionText = slot.options[0].text;
+    await finalize(slot);
+  } catch (err) {
+    slot.phase = "error";
+    slot.errorMsg = err.message || String(err);
+    renderSlots();
+  }
+}
+
+// Renders "cars often compared with this one" suggestion chips for a
+// resolved car, each with a one-click "Add to compare" button.
+function renderSuggestions(slot) {
+  if (!slot.ref) return null;
+  // Use each resolved car's own matched *curated entry* (not its raw
+  // fueleconomy model text, which often carries suffixes like "AWD" that
+  // wouldn't match the curated dataset's key) so already-added cars are
+  // correctly excluded from their own suggestion list.
+  const excludeKeys = slots
+    .filter((s) => s.phase === "done" && s.ref)
+    .map((s) => `${normalizeKey(s.ref.make)}|${normalizeKey(s.ref.model)}`);
+  const suggestions = suggestSimilarCars(slot.make, slot.model, excludeKeys, 4);
+  if (!suggestions.length) return null;
+
+  const categoryLabel = CATEGORY_LABELS[slot.ref.category] || "similar cars";
+  return el("div", { class: "suggestions" },
+    el("div", { class: "suggestions-title" }, `Often compared with this ${categoryLabel}:`),
+    el("div", { class: "suggestions-list" },
+      ...suggestions.map((entry) => el("div", { class: "suggestion-chip" },
+        el("span", null, `${entry.make} ${entry.model}`),
+        el("button", {
+          class: "link-btn",
+          disabled: slots.length >= MAX_SLOTS && !slots.some((s) => s.phase === "make" && !s.make) ? "disabled" : null,
+          onclick: () => addSuggestedCar(entry),
+        }, "+ Add to compare"),
+      )),
+    ),
+  );
+}
+
 // YouTube search links for a resolved car. There's no free/keyless API to
 // look up a specific matching video, so these open a YouTube search --
 // reliable, no API key needed, and still one click from the actual reviews.
@@ -466,6 +540,7 @@ function renderSlots() {
           "This car is remembered and will load automatically next time. ",
           el("button", { class: "link-btn", onclick: () => forgetMyCar() }, "Forget"),
         ) : null,
+        idx === 0 ? renderSuggestions(slot) : null,
       ));
     }
 
