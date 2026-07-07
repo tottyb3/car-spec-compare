@@ -126,6 +126,7 @@ function addSlot() {
 }
 
 function removeSlot(id) {
+  if (slots.length <= 2) return; // always keep at least 2 comparison slots
   slots = slots.filter((s) => s.id !== id);
   renderSlots();
   renderResults();
@@ -636,7 +637,8 @@ function renderResults() {
   const table = el("table", { class: "compare-table" });
   const headRow = el("tr", null,
     el("th", null, "Spec"),
-    ...done.map((s, i) => el("th", null,
+    ...done.map((s, i) => el("th", { class: "th-car" },
+      slots.length > 2 ? el("button", { class: "remove-col-btn", title: "Remove from comparison", onclick: () => removeSlot(s.id) }, "✕") : null,
       i === 0 ? "Your Car" : `Car ${i + 1}`,
       el("div", { class: "th-sub" }, s.trimNote ? `${s.year} ${s.make} ${s.model} · ${s.trimNote}` : `${s.year} ${s.make} ${s.model}`),
       el("div", { class: "th-links" }, ...reviewLinks(s)),

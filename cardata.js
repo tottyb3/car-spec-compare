@@ -46,6 +46,7 @@ const CAR_REFERENCE_DATA = [
   { make: "Jeep", model: "Wrangler", years: "2024-2025", category: "offroad-suv", hp: 285, torqueLbFt: 260, zeroToSixty: 6.9, topSpeedMph: 99, curbWeightLbs: 4145, cargoCuFt: 31.7, seating: 5, lengthIn: 166.8, widthIn: 73.8, heightIn: 73.6, wheelbaseIn: 96.8, basePriceUsd: 33290, turningRadiusFt: 20.6 },
   { make: "Jeep", model: "Grand Cherokee", years: "2022-2025", category: "midsize-suv", hp: 293, torqueLbFt: 260, zeroToSixty: 6.9, topSpeedMph: 121, curbWeightLbs: 4448, cargoCuFt: 37.7, seating: 5, lengthIn: 193.5, widthIn: 77.7, heightIn: 68.4, wheelbaseIn: 116.7, basePriceUsd: 38490, turningRadiusFt: 18.6 },
   { make: "BMW", model: "330i", years: "2023-2025", category: "luxury-sedan", hp: 255, torqueLbFt: 295, zeroToSixty: 5.6, topSpeedMph: 130, curbWeightLbs: 3600, cargoCuFt: 17.0, seating: 5, lengthIn: 185.7, widthIn: 71.9, heightIn: 56.8, wheelbaseIn: 112.2, basePriceUsd: 44500, turningRadiusFt: 18.4 },
+  { make: "BMW", model: "X5", years: "2024-2025", category: "luxury-suv", hp: 375, torqueLbFt: 398, zeroToSixty: 5.3, topSpeedMph: 130, curbWeightLbs: 5145, cargoCuFt: 33.9, seating: 5, lengthIn: 194.3, widthIn: 78.9, heightIn: 68.7, wheelbaseIn: 117.1, basePriceUsd: 68900, turningRadiusFt: 19.6 },
   { make: "Volkswagen", model: "Jetta", years: "2022-2025", category: "compact-sedan", hp: 158, torqueLbFt: 184, zeroToSixty: 7.6, topSpeedMph: 126, curbWeightLbs: 3016, cargoCuFt: 14.1, seating: 5, lengthIn: 186.5, widthIn: 70.8, heightIn: 57.7, wheelbaseIn: 105.7, basePriceUsd: 21440, turningRadiusFt: 18.4 },
   { make: "Volkswagen", model: "Tiguan", years: "2022-2024", category: "compact-suv", hp: 184, torqueLbFt: 221, zeroToSixty: 8.1, topSpeedMph: 126, curbWeightLbs: 3611, cargoCuFt: 37.6, seating: 5, lengthIn: 185.1, widthIn: 72.4, heightIn: 66.3, wheelbaseIn: 109.8, basePriceUsd: 28450, turningRadiusFt: 19.2 },
   { make: "Lexus", model: "TX 350", years: "2024-2025", category: "3row-suv", hp: 275, torqueLbFt: 317, zeroToSixty: 7.8, topSpeedMph: 118, curbWeightLbs: 4740, cargoCuFt: 21.2, cargoBehind2ndRowCuFt: 57.2, seating: 7, lengthIn: 200.2, widthIn: 78.0, heightIn: 68.1, wheelbaseIn: 116.1, basePriceUsd: 56050, turningRadiusFt: 19.5 },
@@ -63,6 +64,7 @@ const CATEGORY_LABELS = {
   "ev-sedan": "Electric Sedan",
   "ev-suv": "Electric SUV",
   "luxury-sedan": "Luxury Sedan",
+  "luxury-suv": "Luxury SUV",
   "offroad-suv": "Off-Road SUV",
 };
 
