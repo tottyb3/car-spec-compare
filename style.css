@@ -215,17 +215,6 @@ main {
   gap: 12px;
 }
 
-.trim-note-input {
-  margin-top: 8px;
-  width: 100%;
-  padding: 6px 8px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: #14112c;
-  color: var(--text);
-  font-size: 0.8rem;
-}
-
 .suggestions {
   margin-top: 14px;
   padding-top: 12px;
