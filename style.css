@@ -351,6 +351,11 @@ button {
 .swatch.worse { background: var(--worse); }
 .swatch.neutral { background: var(--neutral); }
 
+#compareTableWrap {
+  max-height: 70vh;
+  overflow: auto;
+}
+
 .compare-table {
   border-collapse: collapse;
   width: 100%;
@@ -368,6 +373,26 @@ button {
 .compare-table thead th {
   border-bottom: 2px solid var(--border);
   vertical-align: top;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--card);
+}
+
+/* Freeze the spec-name column so it stays visible while scrolling
+   horizontally through car columns. */
+.compare-table th:first-child,
+.compare-table td.spec-label {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--card);
+}
+
+/* The top-left corner cell is frozen on both axes, so it needs to sit
+   above both the sticky header row and the sticky spec-name column. */
+.compare-table thead th:first-child {
+  z-index: 3;
 }
 
 .th-sub {

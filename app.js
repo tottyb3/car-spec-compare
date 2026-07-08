@@ -68,6 +68,9 @@ function makeSlot() {
     live: null,
     ref: null,
     trimNote: "",
+    // null = not checked yet, "searching", { year } = found in a nearby
+    // year, "notfound" = checked nearby years and nothing turned up.
+    yearFallback: null,
   };
 }
 
@@ -174,6 +177,61 @@ async function changeYear(slot, newYear) {
   try {
     slot.makes = await fetchMakes(newYear);
     slot.phase = "make";
+  } catch (err) {
+    slot.phase = "error";
+    slot.errorMsg = err.message || String(err);
+  }
+  renderSlots();
+}
+
+// When a model search comes up empty for the selected year, fueleconomy.gov
+// sometimes just has a gap for that specific year (seen with the 2026 Kia
+// Telluride -- 2025 and 2027 both have data, 2026 has none at all). Rather
+// than leave the user stuck on a "No matches" dead end, check nearby years
+// for the same make and offer a one-click switch if one has the model.
+async function findYearWithModel(slot) {
+  const text = slot.searchText;
+  if (!text || !slot.make) return;
+  slot.yearFallback = "searching";
+  renderSlots();
+
+  const current = parseInt(slot.year, 10);
+  const candidates = [];
+  for (let d = 1; d <= 3; d++) {
+    candidates.push(String(current - d), String(current + d));
+  }
+  const validYears = candidates.filter((y) => slot.years.some((yy) => yy.value === y));
+
+  for (const y of validYears) {
+    try {
+      const models = await fetchModels(y, slot.make);
+      if (filterAndSort(models, text, true).length) {
+        slot.yearFallback = { year: y };
+        renderSlots();
+        return;
+      }
+    } catch (err) {
+      // ignore and keep trying other candidate years
+    }
+  }
+  slot.yearFallback = "notfound";
+  renderSlots();
+}
+
+// Switches to a year found by findYearWithModel(), keeping the in-progress
+// model search text so the now-matching results show immediately.
+async function switchYearForSearch(slot, year) {
+  const text = slot.searchText;
+  slot.year = year;
+  slot.yearFallback = null;
+  slot.phase = "loading";
+  renderSlots();
+  try {
+    slot.makes = await fetchMakes(year);
+    slot.models = await fetchModels(year, slot.make);
+    slot.searchText = text;
+    slot.dropdownOpen = true;
+    slot.phase = "model";
   } catch (err) {
     slot.phase = "error";
     slot.errorMsg = err.message || String(err);
@@ -421,18 +479,41 @@ function buildDropdownNode(slot) {
   if (!phaseConfig || !slot.dropdownOpen) return null;
   const filtered = filterAndSort(phaseConfig.list, slot.searchText, phaseConfig.suffixStrip);
   const items = filtered.slice(0, 30);
-  const noMatchHint = slot.phase === "model" && slot.searchText
-    ? "No matches for this model year — fueleconomy.gov may not have published data for it yet. Try a different year above."
-    : "No matches";
-  return el("div", { class: "search-dropdown" },
-    items.length
-      ? items.map((item) => el("button", {
-          type: "button",
-          class: "search-item",
-          onmousedown: (e) => { e.preventDefault(); const val = slot.phase === "trim" ? item.value : item.text; phaseConfig.select(slot, val); },
-        }, item.text))
-      : el("div", { class: "search-empty" }, noMatchHint),
-  );
+
+  if (items.length) {
+    return el("div", { class: "search-dropdown" },
+      items.map((item) => el("button", {
+        type: "button",
+        class: "search-item",
+        onmousedown: (e) => { e.preventDefault(); const val = slot.phase === "trim" ? item.value : item.text; phaseConfig.select(slot, val); },
+      }, item.text)),
+    );
+  }
+
+  if (slot.phase !== "model" || !slot.searchText) {
+    return el("div", { class: "search-dropdown" }, el("div", { class: "search-empty" }, "No matches"));
+  }
+
+  // Model search came up empty for the current year -- offer to check
+  // nearby years, since fueleconomy.gov sometimes just has a gap for one
+  // specific model year (e.g. the 2026 Kia Telluride).
+  let fallbackNode;
+  if (slot.yearFallback === "searching") {
+    fallbackNode = el("div", { class: "search-empty" }, "Checking nearby model years…");
+  } else if (slot.yearFallback && slot.yearFallback.year) {
+    fallbackNode = el("div", { class: "search-empty" },
+      `Found in ${slot.yearFallback.year}. `,
+      el("button", { class: "link-btn", onmousedown: (e) => { e.preventDefault(); switchYearForSearch(slot, slot.yearFallback.year); } }, `Switch to ${slot.yearFallback.year}`),
+    );
+  } else if (slot.yearFallback === "notfound") {
+    fallbackNode = el("div", { class: "search-empty" }, "Not in nearby model years either — fueleconomy.gov may not cover this model.");
+  } else {
+    fallbackNode = el("div", { class: "search-empty" },
+      "No matches for this model year. ",
+      el("button", { class: "link-btn", onmousedown: (e) => { e.preventDefault(); findYearWithModel(slot); } }, "Check nearby years"),
+    );
+  }
+  return el("div", { class: "search-dropdown" }, fallbackNode);
 }
 
 // Patches just this slot's dropdown in place, leaving the focused <input>
@@ -458,7 +539,7 @@ function renderSearchBox(slot) {
     autocomplete: "off",
     name: `car-search-${slot.id}-${slot.phase}`,
     value: slot.searchText,
-    oninput: (e) => { slot.searchText = e.target.value; slot.dropdownOpen = true; updateSearchDropdown(slot); },
+    oninput: (e) => { slot.searchText = e.target.value; slot.dropdownOpen = true; slot.yearFallback = null; updateSearchDropdown(slot); },
     onfocus: () => { focusedSlotId = slot.id; slot.dropdownOpen = true; updateSearchDropdown(slot); },
     onblur: () => { setTimeout(() => { if (focusedSlotId === slot.id) focusedSlotId = null; slot.dropdownOpen = false; updateSearchDropdown(slot); }, 150); },
     onkeydown: (e) => {
