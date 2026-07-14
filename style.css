@@ -341,8 +341,7 @@ button {
 .swatch.neutral { background: var(--neutral); }
 
 #compareTableWrap {
-  max-height: 70vh;
-  overflow: auto;
+  overflow-x: auto;
 }
 
 .compare-table {
@@ -362,14 +361,11 @@ button {
 .compare-table thead th {
   border-bottom: 2px solid var(--border);
   vertical-align: top;
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: var(--card);
 }
 
 /* Freeze the spec-name column so it stays visible while scrolling
-   horizontally through car columns. */
+   horizontally through car columns. This works on any screen size because
+   it only relies on the horizontal scroll of #compareTableWrap itself. */
 .compare-table th:first-child,
 .compare-table td.spec-label {
   position: sticky;
@@ -378,10 +374,31 @@ button {
   background: var(--card);
 }
 
-/* The top-left corner cell is frozen on both axes, so it needs to sit
-   above both the sticky header row and the sticky spec-name column. */
-.compare-table thead th:first-child {
-  z-index: 3;
+/* Freezing the header row too requires a height-bounded, independently
+   scrolling pane for position:sticky to stick to (a plain overflow-x:auto
+   box has no fixed height, so "top: 0" would stick to that box's own
+   unbounded scrollport instead of the viewport -- it just scrolls away).
+   That bounded nested-scroll pane is fine with a mouse/trackpad, but on
+   touch it fights the page's own scroll gesture, so only do this on
+   larger (non-touch-primary) screens. */
+@media (min-width: 768px) {
+  #compareTableWrap {
+    max-height: 70vh;
+    overflow: auto;
+  }
+
+  .compare-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--card);
+  }
+
+  /* The top-left corner cell is frozen on both axes, so it needs to sit
+     above both the sticky header row and the sticky spec-name column. */
+  .compare-table thead th:first-child {
+    z-index: 3;
+  }
 }
 
 .th-sub {

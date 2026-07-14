@@ -482,7 +482,7 @@ function buildDropdownNode(slot) {
       items.map((item) => el("button", {
         type: "button",
         class: "search-item",
-        onmousedown: (e) => { e.preventDefault(); const val = slot.phase === "trim" ? item.value : item.text; phaseConfig.select(slot, val); },
+        onpointerdown: (e) => { e.preventDefault(); const val = slot.phase === "trim" ? item.value : item.text; phaseConfig.select(slot, val); },
       }, item.text)),
     );
   }
@@ -500,14 +500,14 @@ function buildDropdownNode(slot) {
   } else if (slot.yearFallback && slot.yearFallback.year) {
     fallbackNode = el("div", { class: "search-empty" },
       `Found in ${slot.yearFallback.year}. `,
-      el("button", { class: "link-btn", onmousedown: (e) => { e.preventDefault(); switchYearForSearch(slot, slot.yearFallback.year); } }, `Switch to ${slot.yearFallback.year}`),
+      el("button", { class: "link-btn", onpointerdown: (e) => { e.preventDefault(); switchYearForSearch(slot, slot.yearFallback.year); } }, `Switch to ${slot.yearFallback.year}`),
     );
   } else if (slot.yearFallback === "notfound") {
     fallbackNode = el("div", { class: "search-empty" }, "Not in nearby model years either — fueleconomy.gov may not cover this model.");
   } else {
     fallbackNode = el("div", { class: "search-empty" },
       "No matches for this model year. ",
-      el("button", { class: "link-btn", onmousedown: (e) => { e.preventDefault(); findYearWithModel(slot); } }, "Check nearby years"),
+      el("button", { class: "link-btn", onpointerdown: (e) => { e.preventDefault(); findYearWithModel(slot); } }, "Check nearby years"),
     );
   }
   return el("div", { class: "search-dropdown" }, fallbackNode);
